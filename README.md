@@ -52,7 +52,7 @@ Reached 2.2% target: 3 days (10.0% of the time)
 
 ## License
 
-[Apacher License 2.0](LICENSE)
+[Apache 2.0 License](LICENSE)
 
 ## Contributing
 
