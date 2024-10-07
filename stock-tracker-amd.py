@@ -46,8 +46,6 @@ class AutomatedAMDTracker:
             print("No new data to process")
             return "No new data to process"
 
-        # ... rest of the method remains the same
-
 
         latest_data = history.iloc[-1]
         date = latest_data.name.strftime('%Y-%m-%d')
@@ -78,22 +76,6 @@ class AutomatedAMDTracker:
 
         return f"Recorded data for {date}: {change_pct:.2f}% change"
 
-    # def get_summary(self):
-    #     if len(self.df) == 0:
-    #         return "No data recorded yet."
-
-    #     total_days = len(self.df)
-    #     days_reached_targets = {
-    #         target: len(self.df[self.df['daily_change_pct'] >= target])
-    #         for target in self.targets
-    #     }
-
-    #     summary = f"Summary of {total_days} trading days:\\n"
-    #     for target, days in days_reached_targets.items():
-    #         percentage = (days / total_days) * 100 if total_days > 0 else 0
-    #         summary += f"Reached {target}% target: {days} days ({percentage:.1f}% of the time)\\n"
-
-    #     return summary
     
     def get_summary(self):
         if len(self.df) == 0:
@@ -115,8 +97,6 @@ class AutomatedAMDTracker:
         summary += "-" * 50
 
         return summary
-
-
 
 
 def run_daily_tracking():
