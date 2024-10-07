@@ -14,19 +14,6 @@ class AutomatedAMDTracker:
                                            'daily_change_pct', 'targets_reached'])
             print("Created new tracking dataframe")
 
-    # def fetch_daily_data(self):
-    #     # Get today's date and yesterday's date
-    #     today = datetime.now().strftime('%Y-%m-%d')
-    #     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-
-    #     # Fetch AMD stock data
-    #     stock = yf.Ticker(self.symbol)
-    #     history = stock.history(start=yesterday, end=today)
-
-    #     if len(history) == 0:
-    #         return None, "No data available for the specified date range"
-
-    #     return history, None
 
     def fetch_daily_data(self):
         # Get today's date and the previous trading day
@@ -91,6 +78,23 @@ class AutomatedAMDTracker:
 
         return f"Recorded data for {date}: {change_pct:.2f}% change"
 
+    # def get_summary(self):
+    #     if len(self.df) == 0:
+    #         return "No data recorded yet."
+
+    #     total_days = len(self.df)
+    #     days_reached_targets = {
+    #         target: len(self.df[self.df['daily_change_pct'] >= target])
+    #         for target in self.targets
+    #     }
+
+    #     summary = f"Summary of {total_days} trading days:\\n"
+    #     for target, days in days_reached_targets.items():
+    #         percentage = (days / total_days) * 100 if total_days > 0 else 0
+    #         summary += f"Reached {target}% target: {days} days ({percentage:.1f}% of the time)\\n"
+
+    #     return summary
+    
     def get_summary(self):
         if len(self.df) == 0:
             return "No data recorded yet."
@@ -101,18 +105,19 @@ class AutomatedAMDTracker:
             for target in self.targets
         }
 
-        summary = f"Summary of {total_days} trading days:\\n"
+        summary = f"Summary of {total_days} trading days:\n"
+        summary += "-" * 50 + "\n"
+        summary += f"{'Target':>10} | {'Days Reached':>12} | {'Percentage':>10}\n"
+        summary += "-" * 50 + "\n"
         for target, days in days_reached_targets.items():
             percentage = (days / total_days) * 100 if total_days > 0 else 0
-            summary += f"Reached {target}% target: {days} days ({percentage:.1f}% of the time)\\n"
+            summary += f"{target:>10}% | {days:>12} | {percentage:>9.1f}%\n"
+        summary += "-" * 50
 
         return summary
 
-# def run_daily_tracking():
-#     tracker = AutomatedAMDTracker()
-#     result = tracker.update_tracking()
-#     print(result)
-#     print("\\n" + tracker.get_summary())
+
+
 
 def run_daily_tracking():
     tracker = AutomatedAMDTracker()
@@ -123,6 +128,6 @@ def run_daily_tracking():
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
-
+# Run the daily tracking
 if __name__ == "__main__":
     run_daily_tracking()
