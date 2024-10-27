@@ -1,6 +1,7 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
+import pytz
 
 class AutomatedAMDTracker:
     def __init__(self, targets=[1.2, 1.5, 2.2]):
@@ -14,25 +15,65 @@ class AutomatedAMDTracker:
                                            'daily_change_pct', 'targets_reached'])
             print("Created new tracking dataframe")
 
+    def is_market_open(self):
+        """
+        Handling Market Hours: Check if the market is currently open
+        """
+        et_tz = pytz.timezone('US/Eastern')
+        now = datetime.now(et_tz)
+        
+        # Check if it's a weekday
+        if now.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
+            return False
+        
+        # Check if it's between 9:30 AM and 4:00 PM ET
+        market_start = now.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_end = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        
+        return market_start <= now <= market_end
+
 
     def fetch_daily_data(self):
-        # Get today's date and the previous trading day
+        # Get today's date
         today = datetime.now()
-        previous_trading_day = today - timedelta(days=1)
-        while previous_trading_day.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            previous_trading_day -= timedelta(days=1)
 
-        today_str = today.strftime('%Y-%m-%d')
-        previous_trading_day_str = previous_trading_day.strftime('%Y-%m-%d')
+        # Check if the market is open
+        if not self.is_market_open():
+            print("Market is currently closed. Fetching most recent available data.")
+            
+            # Start looking for data from yesterday
+            look_back_date = today - timedelta(days=1)
+            
+            # Keep looking back until we find data (max 10 days to avoid infinite loop)
+            for _ in range(10):
+                # Format the date as a string
+                date_str = look_back_date.strftime('%Y-%m-%d')
+                
+                # Try to fetch data for this date
+                stock = yf.Ticker(self.symbol)
+                history = stock.history(start=date_str, end=date_str)
+                
+                # If we found data, return it
+                if not history.empty:
+                    print(f"Found data for {date_str}")
+                    return history, None
+                
+                # If no data, look one day further back
+                look_back_date -= timedelta(days=1)
+            
+            # If we didn't find any data after 10 days, return an error
+            return None, "No data available for the past 10 days"
 
-        # Fetch AMD stock data
-        stock = yf.Ticker(self.symbol)
-        history = stock.history(start=previous_trading_day_str, end=today_str)
+        else:
+            # Market is open, fetch today's data
+            today_str = today.strftime('%Y-%m-%d')
+            stock = yf.Ticker(self.symbol)
+            history = stock.history(start=today_str, end=today_str)
 
-        if len(history) == 0:
-            return None, "No data available for the specified date range"
+            if history.empty:
+                return None, "No data available for today"
 
-        return history, None
+            return history, None
 
 
     def update_tracking(self):
@@ -42,7 +83,10 @@ class AutomatedAMDTracker:
             print(f"Error fetching data: {error}")
             return error
 
-        if len(history) == 0:
+        # if len(history) == 0:
+        #     print("No new data to process")
+        #     return "No new data to process"
+        if history is None or len(history) == 0:
             print("No new data to process")
             return "No new data to process"
 
